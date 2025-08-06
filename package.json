@@ -1,0 +1,22 @@
+{
+  "name": "gsid-benchmark",
+  "version": "1.0.0",
+  "description": "Comprehensive benchmarking of GSID vs UUID v4",
+  "main": "benchmark.js",
+  "scripts": {
+    "benchmark": "node benchmark.js",
+    "test": "npm run lint && npm run types && node --test",
+    "lint": "eslint . && prettier --check \"**/*.js\"",
+    "fix": "eslint . --fix && prettier --write \"**/*.js\""
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "author": "Benchmark Analysis",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^9.10.0",
+    "eslint-config-metarhia": "^9.1.1",
+    "prettier": "^3.3.3"
+  }
+}
