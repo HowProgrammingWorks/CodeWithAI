@@ -3,6 +3,8 @@
 const { performance } = require('perf_hooks');
 const crypto = require('crypto');
 const { generateGSID } = require('./3-Tech-specs/gsid.js');
+const GSIDv1 = require('./1-Prompt/gsid.js');
+const GSIDv2 = require('./2-Chat-steps/gsid.js');
 
 const calcEntropy = (str) => {
   const freq = new Map();
@@ -143,99 +145,254 @@ const runBenchmarks = () => {
   console.log('🚀 Starting Comprehensive ID Generator Benchmark');
   console.log('='.repeat(60));
   const sampleSize = 1000000;
-  const gsidResults = benchmark(() => generateGSID(), 'GSID', sampleSize);
+
+  const gsidv1Instance = new GSIDv1();
+  const gsidv2Instance = new GSIDv2();
+
+  const gsidResults = benchmark(
+    () => generateGSID(),
+    'GSID (Tech-specs)',
+    sampleSize,
+  );
+  const gsidv1Results = benchmark(
+    () => gsidv1Instance.generate(),
+    'GSID v1 (Prompt)',
+    sampleSize,
+  );
+  const gsidv2Results = benchmark(
+    () => gsidv2Instance.generate(),
+    'GSID v2 (Chat-steps)',
+    sampleSize,
+  );
   const uuidResults = benchmark(
     () => crypto.randomUUID(),
     'UUID v4',
     sampleSize,
   );
+
   console.log('\n' + '='.repeat(60));
   console.log('📊 COMPREHENSIVE COMPARISON SUMMARY');
   console.log('='.repeat(60));
-  const performanceSpeedup = gsidResults.rate / uuidResults.rate;
+
   console.log('\n⚡ Performance Comparison:');
   const gsidRate = gsidResults.rate.toLocaleString();
   const gsidDuration = gsidResults.duration.toFixed(2);
-  console.log(`   GSID:     ${gsidRate} IDs/sec (${gsidDuration}ms)`);
+  const gsidPerf = `${gsidRate} IDs/sec (${gsidDuration}ms)`;
+  console.log(`   GSID (Tech-specs): ${gsidPerf}`);
+
+  const gsidv1Rate = gsidv1Results.rate.toLocaleString();
+  const gsidv1Duration = gsidv1Results.duration.toFixed(2);
+  const gsidv1Perf = `${gsidv1Rate} IDs/sec (${gsidv1Duration}ms)`;
+  console.log(`   GSID v1 (Prompt):  ${gsidv1Perf}`);
+
+  const gsidv2Rate = gsidv2Results.rate.toLocaleString();
+  const gsidv2Duration = gsidv2Results.duration.toFixed(2);
+  const gsidv2Perf = `${gsidv2Rate} IDs/sec (${gsidv2Duration}ms)`;
+  console.log(`   GSID v2 (Chat):    ${gsidv2Perf}`);
+
   const uuidRate = uuidResults.rate.toLocaleString();
   const uuidDuration = uuidResults.duration.toFixed(2);
-  console.log(`   UUID v4:  ${uuidRate} IDs/sec (${uuidDuration}ms)`);
-  console.log(`   Speedup:  ${performanceSpeedup.toFixed(2)}x faster`);
+  const uuidPerf = `${uuidRate} IDs/sec (${uuidDuration}ms)`;
+  console.log(`   UUID v4:           ${uuidPerf}`);
+
+  const fastest = Math.max(
+    gsidResults.rate,
+    gsidv1Results.rate,
+    gsidv2Results.rate,
+    uuidResults.rate,
+  );
+  let fastestName;
+  if (fastest === gsidResults.rate) {
+    fastestName = 'GSID (Tech-specs)';
+  } else if (fastest === gsidv1Results.rate) {
+    fastestName = 'GSID v1 (Prompt)';
+  } else if (fastest === gsidv2Results.rate) {
+    fastestName = 'GSID v2 (Chat)';
+  } else {
+    fastestName = 'UUID v4';
+  }
+  const fastestPerf = `${fastest.toLocaleString()} IDs/sec`;
+  console.log(`   Fastest:           ${fastestName} (${fastestPerf})`);
+
   const gsidMemoryMB = (gsidResults.memoryDelta.heapUsed / 1024 / 1024).toFixed(
     2,
   );
+  const gsidv1MemoryMB = (
+    gsidv1Results.memoryDelta.heapUsed /
+    1024 /
+    1024
+  ).toFixed(2);
+  const gsidv2MemoryMB = (
+    gsidv2Results.memoryDelta.heapUsed /
+    1024 /
+    1024
+  ).toFixed(2);
   const uuidMemoryMB = (uuidResults.memoryDelta.heapUsed / 1024 / 1024).toFixed(
     2,
   );
+
   console.log('\n💾 Memory Usage Comparison:');
-  console.log(`   GSID Heap Used:     ${gsidMemoryMB} MB`);
-  console.log(`   UUID v4 Heap Used:  ${uuidMemoryMB} MB`);
+  console.log(`   GSID (Tech-specs): ${gsidMemoryMB} MB`);
+  console.log(`   GSID v1 (Prompt):  ${gsidv1MemoryMB} MB`);
+  console.log(`   GSID v2 (Chat):    ${gsidv2MemoryMB} MB`);
+  console.log(`   UUID v4:           ${uuidMemoryMB} MB`);
+
   const gsidEntropyPerChar = gsidResults.avgEntropy / gsidResults.avgSize;
+  const gsidv1EntropyPerChar = gsidv1Results.avgEntropy / gsidv1Results.avgSize;
+  const gsidv2EntropyPerChar = gsidv2Results.avgEntropy / gsidv2Results.avgSize;
   const uuidEntropyPerChar = uuidResults.avgEntropy / uuidResults.avgSize;
-  const entropyDiff = gsidEntropyPerChar - uuidEntropyPerChar;
-  const entropyRatio = entropyDiff / uuidEntropyPerChar;
-  const entropyImprovement = (entropyRatio * 100).toFixed(1);
+
   console.log('\n🎲 Measured Entropy (per character):');
-  console.log(`   GSID:     ${gsidEntropyPerChar.toFixed(4)} bits/char`);
-  console.log(`   UUID v4:  ${uuidEntropyPerChar.toFixed(4)} bits/char`);
-  const improvementText = `${entropyImprovement}% higher entropy per character`;
-  console.log(`   Improvement:      ${improvementText}`);
-  const sizeDiff = uuidResults.avgSize - gsidResults.avgSize;
-  const sizeReduction = ((sizeDiff / uuidResults.avgSize) * 100).toFixed(1);
+  const gsidEntropyStr = `${gsidEntropyPerChar.toFixed(4)} bits/char`;
+  console.log(`   GSID (Tech-specs): ${gsidEntropyStr}`);
+  const gsidv1EntropyStr = `${gsidv1EntropyPerChar.toFixed(4)} bits/char`;
+  console.log(`   GSID v1 (Prompt):  ${gsidv1EntropyStr}`);
+  const gsidv2EntropyStr = `${gsidv2EntropyPerChar.toFixed(4)} bits/char`;
+  console.log(`   GSID v2 (Chat):    ${gsidv2EntropyStr}`);
+  const uuidEntropyStr = `${uuidEntropyPerChar.toFixed(4)} bits/char`;
+  console.log(`   UUID v4:           ${uuidEntropyStr}`);
+
+  const bestEntropy = Math.max(
+    gsidEntropyPerChar,
+    gsidv1EntropyPerChar,
+    gsidv2EntropyPerChar,
+    uuidEntropyPerChar,
+  );
+  let bestEntropyName;
+  if (bestEntropy === gsidEntropyPerChar) {
+    bestEntropyName = 'GSID (Tech-specs)';
+  } else if (bestEntropy === gsidv1EntropyPerChar) {
+    bestEntropyName = 'GSID v1 (Prompt)';
+  } else if (bestEntropy === gsidv2EntropyPerChar) {
+    bestEntropyName = 'GSID v2 (Chat)';
+  } else {
+    bestEntropyName = 'UUID v4';
+  }
+  const bestEntropyPerf = `${bestEntropy.toFixed(4)} bits/char`;
+  console.log(`   Best entropy:      ${bestEntropyName} (${bestEntropyPerf})`);
+
   console.log('\n📏 Size Comparison:');
-  console.log(`   GSID:     ${gsidResults.avgSize.toFixed(1)} characters`);
-  console.log(`   UUID v4:  ${uuidResults.avgSize.toFixed(1)} characters`);
-  console.log(`   Size reduction:   ${sizeReduction}% more compact`);
+  const gsidSizeStr = `${gsidResults.avgSize.toFixed(1)} characters`;
+  console.log(`   GSID (Tech-specs): ${gsidSizeStr}`);
+  const gsidv1SizeStr = `${gsidv1Results.avgSize.toFixed(1)} characters`;
+  console.log(`   GSID v1 (Prompt):  ${gsidv1SizeStr}`);
+  const gsidv2SizeStr = `${gsidv2Results.avgSize.toFixed(1)} characters`;
+  console.log(`   GSID v2 (Chat):    ${gsidv2SizeStr}`);
+  const uuidSizeStr = `${uuidResults.avgSize.toFixed(1)} characters`;
+  console.log(`   UUID v4:           ${uuidSizeStr}`);
+
+  const smallest = Math.min(
+    gsidResults.avgSize,
+    gsidv1Results.avgSize,
+    gsidv2Results.avgSize,
+    uuidResults.avgSize,
+  );
+  let smallestName;
+  if (smallest === gsidResults.avgSize) {
+    smallestName = 'GSID (Tech-specs)';
+  } else if (smallest === gsidv1Results.avgSize) {
+    smallestName = 'GSID v1 (Prompt)';
+  } else if (smallest === gsidv2Results.avgSize) {
+    smallestName = 'GSID v2 (Chat)';
+  } else {
+    smallestName = 'UUID v4';
+  }
+  const smallestPerf = `${smallest.toFixed(1)} chars`;
+  console.log(`   Most compact:      ${smallestName} (${smallestPerf})`);
+
   console.log('\n🔍 Collision Rate Comparison:');
-  console.log(`   GSID:     ${gsidResults.collisionRate.toFixed(8)}%`);
-  console.log(`   UUID v4:  ${uuidResults.collisionRate.toFixed(8)}%`);
+  const gsidCollisionStr = `${gsidResults.collisionRate.toFixed(8)}%`;
+  console.log(`   GSID (Tech-specs): ${gsidCollisionStr}`);
+  const gsidv1CollisionStr = `${gsidv1Results.collisionRate.toFixed(8)}%`;
+  console.log(`   GSID v1 (Prompt):  ${gsidv1CollisionStr}`);
+  const gsidv2CollisionStr = `${gsidv2Results.collisionRate.toFixed(8)}%`;
+  console.log(`   GSID v2 (Chat):    ${gsidv2CollisionStr}`);
+  const uuidCollisionStr = `${uuidResults.collisionRate.toFixed(8)}%`;
+  console.log(`   UUID v4:           ${uuidCollisionStr}`);
+
   console.log('\n🌐 URL Safety:');
   console.log(
-    `   GSID:     ${gsidResults.isUrlSafe ? '✅ Safe' : '❌ Unsafe'}`,
+    `   GSID (Tech-specs): ${gsidResults.isUrlSafe ? '✅ Safe' : '❌ Unsafe'}`,
   );
   console.log(
-    `   UUID v4:  ${uuidResults.isUrlSafe ? '✅ Safe' : '❌ Unsafe'}`,
+    `   GSID v1 (Prompt):  ${gsidv1Results.isUrlSafe ? '✅ Safe' : '❌ Unsafe'}`,
   );
+  console.log(
+    `   GSID v2 (Chat):    ${gsidv2Results.isUrlSafe ? '✅ Safe' : '❌ Unsafe'}`,
+  );
+  console.log(
+    `   UUID v4:           ${uuidResults.isUrlSafe ? '✅ Safe' : '❌ Unsafe'}`,
+  );
+
   const gsidTheoreticalEntropy = Math.log2(64) * gsidResults.avgSize;
+  const gsidv1TheoreticalEntropy = Math.log2(64) * gsidv1Results.avgSize;
+  const gsidv2TheoreticalEntropy = Math.log2(64) * gsidv2Results.avgSize;
   const uuidTheoreticalEntropy = 122;
-  const theoreticalDiff = gsidTheoreticalEntropy - uuidTheoreticalEntropy;
-  const theoreticalEntropyImprovement = (
-    (theoreticalDiff / uuidTheoreticalEntropy) *
-    100
-  ).toFixed(1);
+
   console.log('\n🧮 Theoretical Entropy:');
-  console.log(`   GSID:     ${gsidTheoreticalEntropy} bits`);
+  console.log(`   GSID (Tech-specs): ${gsidTheoreticalEntropy} bits`);
+  console.log(`   GSID v1 (Prompt):  ${gsidv1TheoreticalEntropy} bits`);
+  console.log(`   GSID v2 (Chat):    ${gsidv2TheoreticalEntropy} bits`);
   const uuidSpec = `${uuidTheoreticalEntropy} bits (RFC 4122 specification)`;
-  console.log(`   UUID v4:  ${uuidSpec}`);
-  const theoreticalText = `${theoreticalEntropyImprovement}% more entropy`;
-  console.log(`   Improvement:      ${theoreticalText}`);
+  console.log(`   UUID v4:           ${uuidSpec}`);
+
+  const theoreticalParams = [
+    gsidTheoreticalEntropy,
+    gsidv1TheoreticalEntropy,
+    gsidv2TheoreticalEntropy,
+    uuidTheoreticalEntropy,
+  ];
+  const bestTheoretical = Math.max(...theoreticalParams);
+  let bestName;
+  if (bestTheoretical === gsidTheoreticalEntropy) {
+    bestName = 'GSID (Tech-specs)';
+  } else if (bestTheoretical === gsidv1TheoreticalEntropy) {
+    bestName = 'GSID v1 (Prompt)';
+  } else if (bestTheoretical === gsidv2TheoreticalEntropy) {
+    bestName = 'GSID v2 (Chat)';
+  } else {
+    bestName = 'UUID v4';
+  }
+  const bestTheoreticalPerf = `${bestTheoretical} bits`;
+  console.log(`   Best theoretical:  ${bestName} (${bestTheoreticalPerf})`);
+
   console.log('\n💡 Key Advantages:');
-  if (performanceSpeedup > 1) {
-    const speedupText =
-      `${performanceSpeedup.toFixed(1)}x faster for ` +
-      'high-throughput applications';
-    console.log(`   ✅ GSID is ${speedupText}`);
+  const fastestAdvantage = `${fastest.toLocaleString()} IDs/sec`;
+  console.log(`   ✅ Fastest: ${fastestName} (${fastestAdvantage})`);
+  const compactAdvantage = `${smallest.toFixed(1)} chars`;
+  console.log(`   ✅ Most compact: ${smallestName} (${compactAdvantage})`);
+  const entropyAdvantage = `${bestEntropy.toFixed(4)} bits/char`;
+  console.log(`   ✅ Best entropy: ${bestEntropyName} (${entropyAdvantage})`);
+  const theoreticalAdvantage = `${bestName} (${bestTheoreticalPerf})`;
+  console.log(`   ✅ Best theoretical entropy: ${theoreticalAdvantage}`);
+
+  const allUrlSafe =
+    gsidResults.isUrlSafe &&
+    gsidv1Results.isUrlSafe &&
+    gsidv2Results.isUrlSafe &&
+    uuidResults.isUrlSafe;
+  if (allUrlSafe) {
+    const urlSafeMsg = 'All implementations are URL-safe';
+    console.log(`   ✅ ${urlSafeMsg}`);
   }
-  if (gsidResults.avgSize < uuidResults.avgSize) {
-    const msg = `more compact, better for storage and URLs`;
-    console.log(`   ✅ GSID is ${sizeReduction}% ${msg}`);
+
+  const allNoCollisions =
+    gsidResults.collisionRate === 0 &&
+    gsidv1Results.collisionRate === 0 &&
+    gsidv2Results.collisionRate === 0 &&
+    uuidResults.collisionRate === 0;
+  if (allNoCollisions) {
+    const msg = 'All implementations maintain excellent collision resistance';
+    console.log(`   ✅ ${msg}`);
   }
-  if (gsidResults.isUrlSafe) {
-    console.log('   ✅ GSID is URL-safe without encoding');
-  }
-  if (gsidResults.collisionRate <= uuidResults.collisionRate) {
-    console.log('   ✅ GSID maintains excellent collision resistance');
-  }
-  if (entropyImprovement > 0) {
-    const entropyText = `${entropyImprovement}% higher entropy per character`;
-    console.log(`   ✅ GSID provides ${entropyText}`);
-  }
+
   console.log('\n🎯 Recommended Use Cases:');
   console.log('   🚀 High-performance APIs: GSID');
   console.log('   🗄️  Database primary keys: GSID (shorter, faster)');
   console.log('   🔗 URL parameters: GSID (URL-safe, compact)');
   console.log('   🌍 General purpose: UUID v4 (widely supported)');
   console.log('   📅 Time-ordered data: Consider ULID or UUID v1');
+
   console.log('\n✨ Benchmark completed successfully!');
 };
 
