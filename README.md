@@ -12,22 +12,14 @@ This project demonstrates three different approaches to AI-assisted development 
 
 ## Project Structure
 
-```
-├── 1-Prompt/                          # Short prompt in vibe coding style
-│   ├── [TASKS.md](./1-Prompt/TASKS.md)                       # Task descriptions
-│   ├── [REPORT.md](./1-Prompt/REPORT.md)                      # Implementation report
-│   └── [gsid.js](./1-Prompt/gsid.js)                        # Source implementation
-├── 2-Chat-steps/                      # Step-by-step chat with AI in vibe coding style
-│   ├── [TASKS.md](./2-Chat-steps/TASKS.md)                       # Task descriptions
-│   ├── [REPORT.md](./2-Chat-steps/REPORT.md)                      # Implementation report
-│   └── [gsid.js](./2-Chat-steps/gsid.js)                        # Source implementation
-├── 3-Tech-specs/                      # Technical specification implementation
-│   ├── [TASKS.md](./3-Tech-specs/TASKS.md)                       # Task descriptions
-│   ├── [REPORT.md](./3-Tech-specs/REPORT.md)                      # Implementation report
-│   └── [gsid.js](./3-Tech-specs/gsid.js)                        # Source implementation
-├── [benchmark.js](./benchmark.js)                       # Performance comparison tool
-└── [README.md](./README.md)                          # This file
-```
+- [**1-Prompt/**](./1-Prompt/) - Short prompt in vibe coding style
+  - [TASKS.md](./1-Prompt/TASKS.md); [REPORT.md](./1-Prompt/REPORT.md); Implementation: [gsid.js](./1-Prompt/gsid.js)
+- [**2-Chat-steps/**](./2-Chat-steps) - Step-by-step chat with AI in vibe coding style
+  - [TASKS.md](./2-Chat-steps/TASKS.md); [REPORT.md](./2-Chat-steps/REPORT.md); Implementation: [gsid.js](./2-Chat-steps/gsid.js)
+- [**3-Tech-specs/**](./3-Tech-specs) - Technical specification implementation
+  - [TASKS.md](./3-Tech-specs/TASKS.md); [REPORT.md](./3-Tech-specs/REPORT.md); Implementation: [gsid.js](./3-Tech-specs/gsid.js)
+- [benchmark.js](./benchmark.js) - Performance comparison tool
+- [README.md](./README.md) - This file
 
 ## Development Strategies
 
