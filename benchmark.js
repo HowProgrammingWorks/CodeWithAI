@@ -5,18 +5,14 @@ const crypto = require('crypto');
 const { generateGSID } = require('./3-Tech-specs/gsid.js');
 const GSIDv1 = require('./1-Prompt/gsid.js');
 const GSIDv2 = require('./2-Chat-steps/gsid.js');
+const { generateId: generateSimpleId } = require('./0-Simple/id.js');
 
 let generateID;
 
-const calcEntropy = (str) => {
-  const freq = new Map();
-  for (const char of str) {
-    freq.set(char, (freq.get(char) || 0) + 1);
-  }
+const calcEntropy = (charFreq, totalChars) => {
   let entropy = 0;
-  const len = str.length;
-  for (const count of freq.values()) {
-    const prob = count / len;
+  for (const [char, count] of Object.entries(charFreq)) {
+    const prob = count / totalChars;
     entropy -= prob * Math.log2(prob);
   }
   return entropy;
@@ -109,27 +105,30 @@ const benchmark = (gen, name, size = 1000000) => {
   const unsafePercentStr = `${unsafePercent.toFixed(2)}%`;
   console.log(`   Unsafe character percentage: ${unsafePercentStr}`);
   console.log(`   Total unsafe characters: ${unsafeChars}`);
+  // Keep raw counts for entropy calculation, create percentage version for display
+  const charFreqPercent = {};
   for (const char in charFreq) {
-    charFreq[char] = (charFreq[char] / totalChars) * 100;
+    charFreqPercent[char] = (charFreq[char] / totalChars) * 100;
   }
-  const sortedChars = Object.entries(charFreq).sort(([, a], [, b]) => b - a);
+  const sortedChars = Object.entries(charFreqPercent).sort(([, a], [, b]) => b - a);
   console.log(`\n📊 Character Distribution (top 10):`);
   sortedChars.slice(0, 10).forEach(([char, percent]) => {
     console.log(`   '${char}': ${percent.toFixed(2)}%`);
   });
-  const entropies = entropySamples.map((id) => calcEntropy(id));
-  const avgEntropy =
-    entropies.reduce((sum, e) => sum + e, 0) / entropies.length;
-  const maxEntropy = Math.max(...entropies);
-  const minEntropy = Math.min(...entropies);
-  console.log(`\n🎲 Entropy Analysis (based on 10,000 samples):`);
-  console.log(`   Average Entropy: ${avgEntropy.toFixed(4)} bits`);
-  console.log(`   Max Entropy: ${maxEntropy.toFixed(4)} bits`);
-  console.log(`   Min Entropy: ${minEntropy.toFixed(4)} bits`);
-  const maxBits = Math.log2(64).toFixed(4);
-  const charCount = ids[0].length;
-  const msg = `Theoretical Max (for ${charCount} chars): ${maxBits} bits`;
-  console.log(`   ${msg}`);
+  const totalEntropy = calcEntropy(charFreq, totalChars);
+  const entropyPerChar = totalEntropy;
+  const entropyPerID = totalEntropy * avgLength;
+  console.log(`\n🎲 Entropy Analysis (based on ${size.toLocaleString()} IDs):`);
+  console.log(`   Total Characters: ${totalChars.toLocaleString()}`);
+  console.log(`   Unique Characters: ${Object.keys(charFreq).length}`);
+  console.log(`   Entropy per Character: ${entropyPerChar.toFixed(4)} bits`);
+  console.log(`   Entropy per ID (${avgLength.toFixed(1)} chars): ${entropyPerID.toFixed(4)} bits`);
+  const theoreticalMaxPerChar = Math.log2(64);
+  const theoreticalMaxPerID = theoreticalMaxPerChar * avgLength;
+  console.log(`   Theoretical Max per Character: ${theoreticalMaxPerChar.toFixed(4)} bits`);
+  console.log(`   Theoretical Max per ID: ${theoreticalMaxPerID.toFixed(4)} bits`);
+  const efficiency = (entropyPerID / theoreticalMaxPerID) * 100;
+  console.log(`   Efficiency: ${efficiency.toFixed(2)}%`);
   return {
     samples: ids,
     duration,
@@ -138,7 +137,9 @@ const benchmark = (gen, name, size = 1000000) => {
     collisionRate,
     avgSize: avgLength,
     isUrlSafe,
-    avgEntropy,
+    avgEntropy: entropyPerChar,
+    entropyPerID,
+    efficiency,
     distribution: charFreq,
   };
 };
@@ -174,6 +175,11 @@ const runBenchmarks = async () => {
     'ID (By-example)',
     sampleSize,
   );
+  const simpleResults = benchmark(
+    () => generateSimpleId(),
+    'Simple (0-Simple)',
+    sampleSize,
+  );
   const uuidResults = benchmark(
     () => crypto.randomUUID(),
     'UUID v4',
@@ -205,6 +211,11 @@ const runBenchmarks = async () => {
   const idPerf = `${idRate} IDs/sec (${idDuration}ms)`;
   console.log(`   ID (By-example):   ${idPerf}`);
 
+  const simpleRate = simpleResults.rate.toLocaleString();
+  const simpleDuration = simpleResults.duration.toFixed(2);
+  const simplePerf = `${simpleRate} IDs/sec (${simpleDuration}ms)`;
+  console.log(`   Simple (0-Simple): ${simplePerf}`);
+
   const uuidRate = uuidResults.rate.toLocaleString();
   const uuidDuration = uuidResults.duration.toFixed(2);
   const uuidPerf = `${uuidRate} IDs/sec (${uuidDuration}ms)`;
@@ -215,6 +226,7 @@ const runBenchmarks = async () => {
     gsidv1Results.rate,
     gsidv2Results.rate,
     idResults.rate,
+    simpleResults.rate,
     uuidResults.rate,
   );
   let fastestName;
@@ -226,6 +238,8 @@ const runBenchmarks = async () => {
     fastestName = 'GSID v2 (Chat)';
   } else if (fastest === idResults.rate) {
     fastestName = 'ID (By-example)';
+  } else if (fastest === simpleResults.rate) {
+    fastestName = 'Simple (0-Simple)';
   } else {
     fastestName = 'UUID v4';
   }
@@ -246,6 +260,7 @@ const runBenchmarks = async () => {
     1024
   ).toFixed(2);
   const idMemoryMB = (idResults.memoryDelta.heapUsed / 1024 / 1024).toFixed(2);
+  const simpleMemoryMB = (simpleResults.memoryDelta.heapUsed / 1024 / 1024).toFixed(2);
   const uuidMemoryMB = (uuidResults.memoryDelta.heapUsed / 1024 / 1024).toFixed(
     2,
   );
@@ -255,47 +270,86 @@ const runBenchmarks = async () => {
   console.log(`   GSID v1 (Prompt):  ${gsidv1MemoryMB} MB`);
   console.log(`   GSID v2 (Chat):    ${gsidv2MemoryMB} MB`);
   console.log(`   ID (By-example):   ${idMemoryMB} MB`);
+  console.log(`   Simple (0-Simple): ${simpleMemoryMB} MB`);
   console.log(`   UUID v4:           ${uuidMemoryMB} MB`);
 
-  const gsidEntropyPerChar = gsidResults.avgEntropy / gsidResults.avgSize;
-  const gsidv1EntropyPerChar = gsidv1Results.avgEntropy / gsidv1Results.avgSize;
-  const gsidv2EntropyPerChar = gsidv2Results.avgEntropy / gsidv2Results.avgSize;
-  const idEntropyPerChar = idResults.avgEntropy / idResults.avgSize;
-  const uuidEntropyPerChar = uuidResults.avgEntropy / uuidResults.avgSize;
-
   console.log('\n🎲 Measured Entropy (per character):');
-  const gsidEntropyStr = `${gsidEntropyPerChar.toFixed(4)} bits/char`;
+  const gsidEntropyStr = `${gsidResults.avgEntropy.toFixed(4)} bits/char`;
   console.log(`   GSID (Tech-specs): ${gsidEntropyStr}`);
-  const gsidv1EntropyStr = `${gsidv1EntropyPerChar.toFixed(4)} bits/char`;
+  const gsidv1EntropyStr = `${gsidv1Results.avgEntropy.toFixed(4)} bits/char`;
   console.log(`   GSID v1 (Prompt):  ${gsidv1EntropyStr}`);
-  const gsidv2EntropyStr = `${gsidv2EntropyPerChar.toFixed(4)} bits/char`;
+  const gsidv2EntropyStr = `${gsidv2Results.avgEntropy.toFixed(4)} bits/char`;
   console.log(`   GSID v2 (Chat):    ${gsidv2EntropyStr}`);
-  const idEntropyStr = `${idEntropyPerChar.toFixed(4)} bits/char`;
+  const idEntropyStr = `${idResults.avgEntropy.toFixed(4)} bits/char`;
   console.log(`   ID (By-example):   ${idEntropyStr}`);
-  const uuidEntropyStr = `${uuidEntropyPerChar.toFixed(4)} bits/char`;
+  const simpleEntropyStr = `${simpleResults.avgEntropy.toFixed(4)} bits/char`;
+  console.log(`   Simple (0-Simple): ${simpleEntropyStr}`);
+  const uuidEntropyStr = `${uuidResults.avgEntropy.toFixed(4)} bits/char`;
   console.log(`   UUID v4:           ${uuidEntropyStr}`);
 
   const bestEntropy = Math.max(
-    gsidEntropyPerChar,
-    gsidv1EntropyPerChar,
-    gsidv2EntropyPerChar,
-    idEntropyPerChar,
-    uuidEntropyPerChar,
+    gsidResults.avgEntropy,
+    gsidv1Results.avgEntropy,
+    gsidv2Results.avgEntropy,
+    idResults.avgEntropy,
+    simpleResults.avgEntropy,
+    uuidResults.avgEntropy,
   );
   let bestEntropyName;
-  if (bestEntropy === gsidEntropyPerChar) {
+  if (bestEntropy === gsidResults.avgEntropy) {
     bestEntropyName = 'GSID (Tech-specs)';
-  } else if (bestEntropy === gsidv1EntropyPerChar) {
+  } else if (bestEntropy === gsidv1Results.avgEntropy) {
     bestEntropyName = 'GSID v1 (Prompt)';
-  } else if (bestEntropy === gsidv2EntropyPerChar) {
+  } else if (bestEntropy === gsidv2Results.avgEntropy) {
     bestEntropyName = 'GSID v2 (Chat)';
-  } else if (bestEntropy === idEntropyPerChar) {
+  } else if (bestEntropy === idResults.avgEntropy) {
     bestEntropyName = 'ID (By-example)';
+  } else if (bestEntropy === simpleResults.avgEntropy) {
+    bestEntropyName = 'Simple (0-Simple)';
   } else {
     bestEntropyName = 'UUID v4';
   }
   const bestEntropyPerf = `${bestEntropy.toFixed(4)} bits/char`;
   console.log(`   Best entropy:      ${bestEntropyName} (${bestEntropyPerf})`);
+
+  console.log('\n🎲 Measured Entropy (per ID):');
+  const gsidEntropyIDStr = `${gsidResults.entropyPerID.toFixed(4)} bits/ID`;
+  console.log(`   GSID (Tech-specs): ${gsidEntropyIDStr}`);
+  const gsidv1EntropyIDStr = `${gsidv1Results.entropyPerID.toFixed(4)} bits/ID`;
+  console.log(`   GSID v1 (Prompt):  ${gsidv1EntropyIDStr}`);
+  const gsidv2EntropyIDStr = `${gsidv2Results.entropyPerID.toFixed(4)} bits/ID`;
+  console.log(`   GSID v2 (Chat):    ${gsidv2EntropyIDStr}`);
+  const idEntropyIDStr = `${idResults.entropyPerID.toFixed(4)} bits/ID`;
+  console.log(`   ID (By-example):   ${idEntropyIDStr}`);
+  const simpleEntropyIDStr = `${simpleResults.entropyPerID.toFixed(4)} bits/ID`;
+  console.log(`   Simple (0-Simple): ${simpleEntropyIDStr}`);
+  const uuidEntropyIDStr = `${uuidResults.entropyPerID.toFixed(4)} bits/ID`;
+  console.log(`   UUID v4:           ${uuidEntropyIDStr}`);
+
+  const bestEntropyID = Math.max(
+    gsidResults.entropyPerID,
+    gsidv1Results.entropyPerID,
+    gsidv2Results.entropyPerID,
+    idResults.entropyPerID,
+    simpleResults.entropyPerID,
+    uuidResults.entropyPerID,
+  );
+  let bestEntropyIDName;
+  if (bestEntropyID === gsidResults.entropyPerID) {
+    bestEntropyIDName = 'GSID (Tech-specs)';
+  } else if (bestEntropyID === gsidv1Results.entropyPerID) {
+    bestEntropyIDName = 'GSID v1 (Prompt)';
+  } else if (bestEntropyID === gsidv2Results.entropyPerID) {
+    bestEntropyIDName = 'GSID v2 (Chat)';
+  } else if (bestEntropyID === idResults.entropyPerID) {
+    bestEntropyIDName = 'ID (By-example)';
+  } else if (bestEntropyID === simpleResults.entropyPerID) {
+    bestEntropyIDName = 'Simple (0-Simple)';
+  } else {
+    bestEntropyIDName = 'UUID v4';
+  }
+  const bestEntropyIDPerf = `${bestEntropyID.toFixed(4)} bits/ID`;
+  console.log(`   Best entropy per ID: ${bestEntropyIDName} (${bestEntropyIDPerf})`);
 
   console.log('\n📏 Size Comparison:');
   const gsidSizeStr = `${gsidResults.avgSize.toFixed(1)} characters`;
@@ -306,6 +360,8 @@ const runBenchmarks = async () => {
   console.log(`   GSID v2 (Chat):    ${gsidv2SizeStr}`);
   const idSizeStr = `${idResults.avgSize.toFixed(1)} characters`;
   console.log(`   ID (By-example):   ${idSizeStr}`);
+  const simpleSizeStr = `${simpleResults.avgSize.toFixed(1)} characters`;
+  console.log(`   Simple (0-Simple): ${simpleSizeStr}`);
   const uuidSizeStr = `${uuidResults.avgSize.toFixed(1)} characters`;
   console.log(`   UUID v4:           ${uuidSizeStr}`);
 
@@ -314,6 +370,7 @@ const runBenchmarks = async () => {
     gsidv1Results.avgSize,
     gsidv2Results.avgSize,
     idResults.avgSize,
+    simpleResults.avgSize,
     uuidResults.avgSize,
   );
   let smallestName;
@@ -325,6 +382,8 @@ const runBenchmarks = async () => {
     smallestName = 'GSID v2 (Chat)';
   } else if (smallest === idResults.avgSize) {
     smallestName = 'ID (By-example)';
+  } else if (smallest === simpleResults.avgSize) {
+    smallestName = 'Simple (0-Simple)';
   } else {
     smallestName = 'UUID v4';
   }
@@ -340,6 +399,8 @@ const runBenchmarks = async () => {
   console.log(`   GSID v2 (Chat):    ${gsidv2CollisionStr}`);
   const idCollisionStr = `${idResults.collisionRate.toFixed(8)}%`;
   console.log(`   ID (By-example):   ${idCollisionStr}`);
+  const simpleCollisionStr = `${simpleResults.collisionRate.toFixed(8)}%`;
+  console.log(`   Simple (0-Simple): ${simpleCollisionStr}`);
   const uuidCollisionStr = `${uuidResults.collisionRate.toFixed(8)}%`;
   console.log(`   UUID v4:           ${uuidCollisionStr}`);
 
@@ -357,6 +418,9 @@ const runBenchmarks = async () => {
     `   ID (By-example):   ${idResults.isUrlSafe ? '✅ Safe' : '❌ Unsafe'}`,
   );
   console.log(
+    `   Simple (0-Simple): ${simpleResults.isUrlSafe ? '✅ Safe' : '❌ Unsafe'}`,
+  );
+  console.log(
     `   UUID v4:           ${uuidResults.isUrlSafe ? '✅ Safe' : '❌ Unsafe'}`,
   );
 
@@ -364,6 +428,7 @@ const runBenchmarks = async () => {
   const gsidv1TheoreticalEntropy = Math.log2(64) * gsidv1Results.avgSize;
   const gsidv2TheoreticalEntropy = Math.log2(64) * gsidv2Results.avgSize;
   const idTheoreticalEntropy = Math.log2(64) * idResults.avgSize;
+  const simpleTheoreticalEntropy = Math.log2(32) * simpleResults.avgSize;
   const uuidTheoreticalEntropy = 122;
 
   console.log('\n🧮 Theoretical Entropy:');
@@ -371,6 +436,7 @@ const runBenchmarks = async () => {
   console.log(`   GSID v1 (Prompt):  ${gsidv1TheoreticalEntropy} bits`);
   console.log(`   GSID v2 (Chat):    ${gsidv2TheoreticalEntropy} bits`);
   console.log(`   ID (By-example):   ${idTheoreticalEntropy} bits`);
+  console.log(`   Simple (0-Simple): ${simpleTheoreticalEntropy} bits`);
   const uuidSpec = `${uuidTheoreticalEntropy} bits (RFC 4122 specification)`;
   console.log(`   UUID v4:           ${uuidSpec}`);
 
@@ -379,6 +445,7 @@ const runBenchmarks = async () => {
     gsidv1TheoreticalEntropy,
     gsidv2TheoreticalEntropy,
     idTheoreticalEntropy,
+    simpleTheoreticalEntropy,
     uuidTheoreticalEntropy,
   ];
   const bestTheoretical = Math.max(...theoreticalParams);
@@ -391,6 +458,8 @@ const runBenchmarks = async () => {
     bestName = 'GSID v2 (Chat)';
   } else if (bestTheoretical === idTheoreticalEntropy) {
     bestName = 'ID (By-example)';
+  } else if (bestTheoretical === simpleTheoreticalEntropy) {
+    bestName = 'Simple (0-Simple)';
   } else {
     bestName = 'UUID v4';
   }
@@ -412,6 +481,7 @@ const runBenchmarks = async () => {
     gsidv1Results.isUrlSafe &&
     gsidv2Results.isUrlSafe &&
     idResults.isUrlSafe &&
+    simpleResults.isUrlSafe &&
     uuidResults.isUrlSafe;
   if (allUrlSafe) {
     const urlSafeMsg = 'All implementations are URL-safe';
@@ -423,6 +493,7 @@ const runBenchmarks = async () => {
     gsidv1Results.collisionRate === 0 &&
     gsidv2Results.collisionRate === 0 &&
     idResults.collisionRate === 0 &&
+    simpleResults.collisionRate === 0 &&
     uuidResults.collisionRate === 0;
   if (allNoCollisions) {
     const msg = 'All implementations maintain excellent collision resistance';

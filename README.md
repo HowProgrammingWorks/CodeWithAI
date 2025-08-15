@@ -12,6 +12,8 @@ This project demonstrates three different approaches to AI-assisted development 
 
 ## Project Structure
 
+- [**0-Simple/**](./0-Simple/) - Simple Math.random() implementation
+  - [TASKS.md](./0-Simple/TASKS.md); [REPORT.md](./0-Simple/REPORT.md); Implementation: [id.js](./0-Simple/id.js)
 - [**1-Prompt/**](./1-Prompt/) - Short prompt in vibe coding style
   - [TASKS.md](./1-Prompt/TASKS.md); [REPORT.md](./1-Prompt/REPORT.md); Implementation: [gsid.js](./1-Prompt/gsid.js)
 - [**2-Chat-steps/**](./2-Chat-steps) - Step-by-step chat with AI in vibe coding style
@@ -93,16 +95,18 @@ Professional development workflow with AI as a regular team member.
 
 Based on comprehensive benchmarking, the implementations show significant differences:
 
-| Implementation | Performance | Memory Usage | Size | Entropy |
-|----------------|-------------|--------------|------|---------|
-| **Tech-specs** | 5.95M IDs/sec | 86MB | 24 chars | 0.177 bits/char |
-| **ID (By-example)** | 1.54M IDs/sec | 84MB freed | 24 chars | 0.177 bits/char |
-| **UUID v4** | 3.16M IDs/sec | 470MB | 36 chars | 0.103 bits/char |
-| **Chat-steps** | 1.22M IDs/sec | 39MB | 27 chars | 0.154 bits/char |
-| **Prompt** | 1.27M IDs/sec | 27MB | 27 chars | 0.142 bits/char |
+| # | Implementation | Performance | Memory Usage | Size | Entropy | Theoretical |
+|---|---------------|-------------|--------------|------|---------|-------------|
+| 0 | **Simple** | 2.01M IDs/sec | 93MB | 24 chars | 4.987 bits/char | 120 bits |
+| 1 | **Prompt** | 1.27M IDs/sec | 27MB | 27 chars | 4.776 bits/char | 162 bits |
+| 2 | **Chat-steps** | 1.22M IDs/sec | 39MB | 27 chars | 5.196 bits/char | 162 bits |
+| 3 | **Tech-specs** | 5.95M IDs/sec | 86MB | 24 chars | 6.000 bits/char | 144 bits |
+| 4 | **ID (By-example)** | 1.54M IDs/sec | 84MB freed | 24 chars | 6.000 bits/char | 144 bits |
+| - | **UUID v4** | 3.16M IDs/sec | 470MB | 36 chars | 4.050 bits/char | 122 bits |
 
 **Key Findings**: 
 - Tech-specs approach produces the most efficient implementation - 2x faster than UUID v4
+- Simple implementation shows excellent performance (2.01M IDs/sec) with minimal code complexity
 - ID (By-example) provides excellent browser compatibility with good performance (1.54M IDs/sec) and compact size (24 chars)
 - All implementations maintain perfect collision resistance (0% collision rate)
 - Node.js 24 provides native Web Crypto API support without experimental flags
