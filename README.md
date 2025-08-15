@@ -18,6 +18,8 @@ This project demonstrates three different approaches to AI-assisted development 
   - [TASKS.md](./2-Chat-steps/TASKS.md); [REPORT.md](./2-Chat-steps/REPORT.md); Implementation: [gsid.js](./2-Chat-steps/gsid.js)
 - [**3-Tech-specs/**](./3-Tech-specs) - Technical specification implementation
   - [TASKS.md](./3-Tech-specs/TASKS.md); [REPORT.md](./3-Tech-specs/REPORT.md); Implementation: [gsid.js](./3-Tech-specs/gsid.js)
+- [**4-By-example/**](./4-By-example) - Browser-compatible implementation
+  - [TASKS.md](./4-By-example/TASKS.md); [REPORT.md](./4-By-example/REPORT.md); Implementation: [id.mjs](./4-By-example/id.mjs)
 - [benchmark.js](./benchmark.js) - Performance comparison tool
 - [README.md](./README.md) - This file
 
@@ -93,12 +95,17 @@ Based on comprehensive benchmarking, the implementations show significant differ
 
 | Implementation | Performance | Memory Usage | Size | Entropy |
 |----------------|-------------|--------------|------|---------|
-| **Tech-specs** | 4.65M IDs/sec | 57MB | 24 chars | 0.177 bits/char |
-| **UUID v4** | 1.93M IDs/sec | 341MB | 36 chars | 0.103 bits/char |
-| **Chat-steps** | 1.00M IDs/sec | 69MB | 27 chars | 0.152 bits/char |
-| **Prompt** | 1.02M IDs/sec | 71MB | 27 chars | 0.141 bits/char |
+| **Tech-specs** | 5.95M IDs/sec | 86MB | 24 chars | 0.177 bits/char |
+| **ID (By-example)** | 1.54M IDs/sec | 84MB freed | 24 chars | 0.177 bits/char |
+| **UUID v4** | 3.16M IDs/sec | 470MB | 36 chars | 0.103 bits/char |
+| **Chat-steps** | 1.22M IDs/sec | 39MB | 27 chars | 0.154 bits/char |
+| **Prompt** | 1.27M IDs/sec | 27MB | 27 chars | 0.142 bits/char |
 
-**Key Findings**: Tech-specs approach produces the most efficient implementation - 2.4x faster and 6x more memory efficient than UUID v4.
+**Key Findings**: 
+- Tech-specs approach produces the most efficient implementation - 2x faster than UUID v4
+- ID (By-example) provides excellent browser compatibility with good performance (1.54M IDs/sec) and compact size (24 chars)
+- All implementations maintain perfect collision resistance (0% collision rate)
+- Node.js 24 provides native Web Crypto API support without experimental flags
 
 ## Development Tools Used
 
@@ -113,6 +120,29 @@ Based on comprehensive benchmarking, the implementations show significant differ
 3. **Install dependencies**: `npm i`
 4. **Run tests**: `npm t`
 5. **Run benchmark**: `node benchmark.js`
+
+## Implementation Details
+
+### 4-By-example (Browser-Compatible)
+The browser-compatible implementation demonstrates adapting Node.js code for web environments:
+
+- **Technology**: ES Modules with Web Crypto API
+- **Key Features**: 
+  - Pure Web API usage (`crypto.getRandomValues()`)
+  - No Node.js dependencies
+  - Cross-platform compatibility
+  - Same character set and algorithm as Tech-specs
+- **Performance**: 1.54M IDs/second with 0% collision rate
+- **Size**: 24 characters (same as Tech-specs)
+- **Usage**: 
+  ```javascript
+  // Browser
+  import { generateID } from './id.mjs';
+  const id = generateID();
+  
+  // Node.js (native support in v24+)
+  node benchmark.js
+  ```
 
 ## Lessons Learned
 

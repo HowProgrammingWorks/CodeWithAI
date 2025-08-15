@@ -13,9 +13,17 @@
 
 ### Performance Analysis
 - **UUID Performance**: Node.js `crypto.randomUUID()` is highly optimized (C++ implementation)
-- **GSID Performance**: Custom implementation takes ~88ms vs UUID ~13ms for 100k iterations
-- **Result**: UUID is ~7x faster than custom GSID implementation
+- **GSID Performance**: Custom implementation achieves 1,217,934 IDs/second
+- **Result**: UUID is ~2.6x faster than custom GSID implementation
 - **Conclusion**: Built-in UUID is more performant due to native optimization
+
+### Latest Benchmark Results (1M IDs)
+- **Speed**: 1,217,934 IDs/second
+- **Memory Usage**: 38.60 MB
+- **Collision Rate**: 0.00000000%
+- **Size**: 27 characters
+- **Entropy**: 4.1534 bits per character
+- **URL Safety**: ✅ Safe
 
 ### Code Quality Improvements
 - Fixed linting issues: added 'use strict', proper line lengths, trailing commas

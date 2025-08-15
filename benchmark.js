@@ -6,6 +6,8 @@ const { generateGSID } = require('./3-Tech-specs/gsid.js');
 const GSIDv1 = require('./1-Prompt/gsid.js');
 const GSIDv2 = require('./2-Chat-steps/gsid.js');
 
+let generateID;
+
 const calcEntropy = (str) => {
   const freq = new Map();
   for (const char of str) {
@@ -141,10 +143,13 @@ const benchmark = (gen, name, size = 1000000) => {
   };
 };
 
-const runBenchmarks = () => {
+const runBenchmarks = async () => {
   console.log('🚀 Starting Comprehensive ID Generator Benchmark');
   console.log('='.repeat(60));
   const sampleSize = 1000000;
+
+  const idjs = await import('./4-By-example/id.mjs');
+  generateID = idjs.generateID;
 
   const gsidv1Instance = new GSIDv1();
   const gsidv2Instance = new GSIDv2();
@@ -162,6 +167,11 @@ const runBenchmarks = () => {
   const gsidv2Results = benchmark(
     () => gsidv2Instance.generate(),
     'GSID v2 (Chat-steps)',
+    sampleSize,
+  );
+  const idResults = await benchmark(
+    () => generateID(),
+    'ID (By-example)',
     sampleSize,
   );
   const uuidResults = benchmark(
@@ -190,6 +200,11 @@ const runBenchmarks = () => {
   const gsidv2Perf = `${gsidv2Rate} IDs/sec (${gsidv2Duration}ms)`;
   console.log(`   GSID v2 (Chat):    ${gsidv2Perf}`);
 
+  const idRate = idResults.rate.toLocaleString();
+  const idDuration = idResults.duration.toFixed(2);
+  const idPerf = `${idRate} IDs/sec (${idDuration}ms)`;
+  console.log(`   ID (By-example):   ${idPerf}`);
+
   const uuidRate = uuidResults.rate.toLocaleString();
   const uuidDuration = uuidResults.duration.toFixed(2);
   const uuidPerf = `${uuidRate} IDs/sec (${uuidDuration}ms)`;
@@ -199,6 +214,7 @@ const runBenchmarks = () => {
     gsidResults.rate,
     gsidv1Results.rate,
     gsidv2Results.rate,
+    idResults.rate,
     uuidResults.rate,
   );
   let fastestName;
@@ -208,6 +224,8 @@ const runBenchmarks = () => {
     fastestName = 'GSID v1 (Prompt)';
   } else if (fastest === gsidv2Results.rate) {
     fastestName = 'GSID v2 (Chat)';
+  } else if (fastest === idResults.rate) {
+    fastestName = 'ID (By-example)';
   } else {
     fastestName = 'UUID v4';
   }
@@ -227,6 +245,7 @@ const runBenchmarks = () => {
     1024 /
     1024
   ).toFixed(2);
+  const idMemoryMB = (idResults.memoryDelta.heapUsed / 1024 / 1024).toFixed(2);
   const uuidMemoryMB = (uuidResults.memoryDelta.heapUsed / 1024 / 1024).toFixed(
     2,
   );
@@ -235,11 +254,13 @@ const runBenchmarks = () => {
   console.log(`   GSID (Tech-specs): ${gsidMemoryMB} MB`);
   console.log(`   GSID v1 (Prompt):  ${gsidv1MemoryMB} MB`);
   console.log(`   GSID v2 (Chat):    ${gsidv2MemoryMB} MB`);
+  console.log(`   ID (By-example):   ${idMemoryMB} MB`);
   console.log(`   UUID v4:           ${uuidMemoryMB} MB`);
 
   const gsidEntropyPerChar = gsidResults.avgEntropy / gsidResults.avgSize;
   const gsidv1EntropyPerChar = gsidv1Results.avgEntropy / gsidv1Results.avgSize;
   const gsidv2EntropyPerChar = gsidv2Results.avgEntropy / gsidv2Results.avgSize;
+  const idEntropyPerChar = idResults.avgEntropy / idResults.avgSize;
   const uuidEntropyPerChar = uuidResults.avgEntropy / uuidResults.avgSize;
 
   console.log('\n🎲 Measured Entropy (per character):');
@@ -249,6 +270,8 @@ const runBenchmarks = () => {
   console.log(`   GSID v1 (Prompt):  ${gsidv1EntropyStr}`);
   const gsidv2EntropyStr = `${gsidv2EntropyPerChar.toFixed(4)} bits/char`;
   console.log(`   GSID v2 (Chat):    ${gsidv2EntropyStr}`);
+  const idEntropyStr = `${idEntropyPerChar.toFixed(4)} bits/char`;
+  console.log(`   ID (By-example):   ${idEntropyStr}`);
   const uuidEntropyStr = `${uuidEntropyPerChar.toFixed(4)} bits/char`;
   console.log(`   UUID v4:           ${uuidEntropyStr}`);
 
@@ -256,6 +279,7 @@ const runBenchmarks = () => {
     gsidEntropyPerChar,
     gsidv1EntropyPerChar,
     gsidv2EntropyPerChar,
+    idEntropyPerChar,
     uuidEntropyPerChar,
   );
   let bestEntropyName;
@@ -265,6 +289,8 @@ const runBenchmarks = () => {
     bestEntropyName = 'GSID v1 (Prompt)';
   } else if (bestEntropy === gsidv2EntropyPerChar) {
     bestEntropyName = 'GSID v2 (Chat)';
+  } else if (bestEntropy === idEntropyPerChar) {
+    bestEntropyName = 'ID (By-example)';
   } else {
     bestEntropyName = 'UUID v4';
   }
@@ -278,6 +304,8 @@ const runBenchmarks = () => {
   console.log(`   GSID v1 (Prompt):  ${gsidv1SizeStr}`);
   const gsidv2SizeStr = `${gsidv2Results.avgSize.toFixed(1)} characters`;
   console.log(`   GSID v2 (Chat):    ${gsidv2SizeStr}`);
+  const idSizeStr = `${idResults.avgSize.toFixed(1)} characters`;
+  console.log(`   ID (By-example):   ${idSizeStr}`);
   const uuidSizeStr = `${uuidResults.avgSize.toFixed(1)} characters`;
   console.log(`   UUID v4:           ${uuidSizeStr}`);
 
@@ -285,6 +313,7 @@ const runBenchmarks = () => {
     gsidResults.avgSize,
     gsidv1Results.avgSize,
     gsidv2Results.avgSize,
+    idResults.avgSize,
     uuidResults.avgSize,
   );
   let smallestName;
@@ -294,6 +323,8 @@ const runBenchmarks = () => {
     smallestName = 'GSID v1 (Prompt)';
   } else if (smallest === gsidv2Results.avgSize) {
     smallestName = 'GSID v2 (Chat)';
+  } else if (smallest === idResults.avgSize) {
+    smallestName = 'ID (By-example)';
   } else {
     smallestName = 'UUID v4';
   }
@@ -307,6 +338,8 @@ const runBenchmarks = () => {
   console.log(`   GSID v1 (Prompt):  ${gsidv1CollisionStr}`);
   const gsidv2CollisionStr = `${gsidv2Results.collisionRate.toFixed(8)}%`;
   console.log(`   GSID v2 (Chat):    ${gsidv2CollisionStr}`);
+  const idCollisionStr = `${idResults.collisionRate.toFixed(8)}%`;
+  console.log(`   ID (By-example):   ${idCollisionStr}`);
   const uuidCollisionStr = `${uuidResults.collisionRate.toFixed(8)}%`;
   console.log(`   UUID v4:           ${uuidCollisionStr}`);
 
@@ -321,18 +354,23 @@ const runBenchmarks = () => {
     `   GSID v2 (Chat):    ${gsidv2Results.isUrlSafe ? '✅ Safe' : '❌ Unsafe'}`,
   );
   console.log(
+    `   ID (By-example):   ${idResults.isUrlSafe ? '✅ Safe' : '❌ Unsafe'}`,
+  );
+  console.log(
     `   UUID v4:           ${uuidResults.isUrlSafe ? '✅ Safe' : '❌ Unsafe'}`,
   );
 
   const gsidTheoreticalEntropy = Math.log2(64) * gsidResults.avgSize;
   const gsidv1TheoreticalEntropy = Math.log2(64) * gsidv1Results.avgSize;
   const gsidv2TheoreticalEntropy = Math.log2(64) * gsidv2Results.avgSize;
+  const idTheoreticalEntropy = Math.log2(64) * idResults.avgSize;
   const uuidTheoreticalEntropy = 122;
 
   console.log('\n🧮 Theoretical Entropy:');
   console.log(`   GSID (Tech-specs): ${gsidTheoreticalEntropy} bits`);
   console.log(`   GSID v1 (Prompt):  ${gsidv1TheoreticalEntropy} bits`);
   console.log(`   GSID v2 (Chat):    ${gsidv2TheoreticalEntropy} bits`);
+  console.log(`   ID (By-example):   ${idTheoreticalEntropy} bits`);
   const uuidSpec = `${uuidTheoreticalEntropy} bits (RFC 4122 specification)`;
   console.log(`   UUID v4:           ${uuidSpec}`);
 
@@ -340,6 +378,7 @@ const runBenchmarks = () => {
     gsidTheoreticalEntropy,
     gsidv1TheoreticalEntropy,
     gsidv2TheoreticalEntropy,
+    idTheoreticalEntropy,
     uuidTheoreticalEntropy,
   ];
   const bestTheoretical = Math.max(...theoreticalParams);
@@ -350,6 +389,8 @@ const runBenchmarks = () => {
     bestName = 'GSID v1 (Prompt)';
   } else if (bestTheoretical === gsidv2TheoreticalEntropy) {
     bestName = 'GSID v2 (Chat)';
+  } else if (bestTheoretical === idTheoreticalEntropy) {
+    bestName = 'ID (By-example)';
   } else {
     bestName = 'UUID v4';
   }
@@ -370,6 +411,7 @@ const runBenchmarks = () => {
     gsidResults.isUrlSafe &&
     gsidv1Results.isUrlSafe &&
     gsidv2Results.isUrlSafe &&
+    idResults.isUrlSafe &&
     uuidResults.isUrlSafe;
   if (allUrlSafe) {
     const urlSafeMsg = 'All implementations are URL-safe';
@@ -380,6 +422,7 @@ const runBenchmarks = () => {
     gsidResults.collisionRate === 0 &&
     gsidv1Results.collisionRate === 0 &&
     gsidv2Results.collisionRate === 0 &&
+    idResults.collisionRate === 0 &&
     uuidResults.collisionRate === 0;
   if (allNoCollisions) {
     const msg = 'All implementations maintain excellent collision resistance';
@@ -396,4 +439,4 @@ const runBenchmarks = () => {
   console.log('\n✨ Benchmark completed successfully!');
 };
 
-runBenchmarks();
+runBenchmarks().catch(console.error);
