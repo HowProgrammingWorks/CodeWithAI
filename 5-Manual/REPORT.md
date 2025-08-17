@@ -7,13 +7,13 @@
 ```
 === GSID (5-Manual) Benchmark & Analysis ===
 ⏱️  Performance:
-   Duration: 181.91ms
-   Rate: 5,497,118.71 IDs/second
-   Average time per ID: 0.182μs
+   Duration: 92.04ms
+   Rate: 10,865,091.044 IDs/second
+   Average time per ID: 0.092μs
    Memory Delta: {
-  rss: 62341120,
-  heapUsed: 48108048,
-  heapTotal: 54968320,
+  rss: 31129600,
+  heapUsed: 72272824,
+  heapTotal: 30969856,
   external: 0,
   arrayBuffers: 0
 }
@@ -21,10 +21,10 @@
 
 ### 🏆 Performance Highlights
 
-- **Generation Rate**: **5,497,118.71 IDs/second** - **FASTEST** among all implementations
-- **Average Time**: 0.182μs per ID
-- **Memory Usage**: 45.88 MB (very efficient)
-- **Duration**: 181.91ms for 1,000,000 IDs
+- **Generation Rate**: **10,865,091.044 IDs/second** - **FASTEST** among all implementations
+- **Average Time**: 0.092μs per ID
+- **Memory Usage**: 68.92 MB (very efficient)
+- **Duration**: 92.04ms for 1,000,000 IDs
 
 ## 🔍 Quality Analysis
 
@@ -74,21 +74,21 @@
 ## 🏅 Comparative Performance
 
 ### Speed Ranking
-1. **GSID (5-Manual)**: 5,497,118.71 IDs/sec ⭐ **WINNER**
-2. GSID (Tech-specs): 5,117,145.85 IDs/sec
-3. UUID v4: 2,597,380.78 IDs/sec
-4. Simple (0-Simple): 1,456,729.25 IDs/sec
-5. ID (By-example): 1,339,726.13 IDs/sec
-6. GSID v1 (Prompt): 1,050,503.75 IDs/sec
-7. GSID v2 (Chat): 1,002,811.68 IDs/sec
+1. **GSID (5-Manual)**: 10,865,091.04 IDs/sec ⭐ **WINNER**
+2. GSID (Tech-specs): 5,270,619.21 IDs/sec
+3. UUID v4: 2,100,601.02 IDs/sec
+4. Simple (0-Simple): 1,956,514.23 IDs/sec
+5. ID (By-example): 1,452,989.36 IDs/sec
+6. GSID v1 (Prompt): 1,275,436.18 IDs/sec
+7. GSID v2 (Chat): 1,221,299.59 IDs/sec
 
 ### Memory Efficiency
-1. **GSID (5-Manual)**: 45.88 MB ⭐ **MOST EFFICIENT**
-2. ID (By-example): 56.27 MB
-3. GSID (Tech-specs): 66.83 MB
-4. GSID v1 (Prompt): 69.28 MB
-5. Simple (0-Simple): 106.39 MB
-6. UUID v4: 478.47 MB
+1. **GSID (5-Manual)**: 68.92 MB ⭐ **MOST EFFICIENT**
+2. ID (By-example): -115.67 MB (memory freed)
+3. GSID (Tech-specs): 86.44 MB
+4. GSID v1 (Prompt): 79.07 MB
+5. Simple (0-Simple): 98.59 MB
+6. UUID v4: 311.97 MB
 
 ### Entropy Quality
 1. **GSID (5-Manual)**: 6.0000 bits/char ⭐ **PERFECT**
