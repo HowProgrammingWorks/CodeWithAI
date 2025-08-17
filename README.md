@@ -83,12 +83,12 @@ Professional development workflow with AI as a regular team member.
 | **Short Prompt** | ~5 min | Basic | 1.28M IDs/sec | Basic AI prompt | $5-10 |
 | **Step-by-Step Chat** | ~20 min | Good | 1.22M IDs/sec | Iterative AI development | $10-20 |
 | **Technical Specification** | ~2 hours | Excellent | 5.27M IDs/sec | Detailed AI specifications | $150-250 |
-| **Manual Optimization** | ~30 min | Excellent | 6.90M IDs/sec | Manual optimization | $25-50 |
+| **Manual Optimization** | ~30 min | Excellent | 10.00M IDs/sec | Manual optimization | $25-50 |
 | **Expert Traditional** | ~18 min | Excellent | 5M+ IDs/sec | Optimized implementation | $25-50 |
 
 **Key Insights**:
-- **Manual optimization** achieves the best performance (6.90M IDs/sec) with moderate time investment
-- **Technical specification** provides excellent performance (5.96M IDs/sec) with significant time investment
+- **Manual optimization** achieves the best performance (10.00M IDs/sec) with moderate time investment
+- **Technical specification** provides excellent performance (5.79M IDs/sec) with significant time investment
 - **Step-by-step chat** provides 4x time investment for moderate quality improvement
 - **Short prompt** is fastest but produces lowest quality results
 - **Time investment directly correlates with code quality and performance**
@@ -101,20 +101,22 @@ Based on comprehensive benchmarking, the implementations show significant differ
 
 | # | Implementation | Performance | Memory Usage | Size | Entropy | Theoretical |
 |---|---------------|-------------|--------------|------|---------|-------------|
-| 5 | **Manual (Server)** | **6.90M IDs/sec** | **66MB** | **24 chars** | **6.000 bits/char** | **144 bits** |
-| 3 | **Tech-specs** | 5.96M IDs/sec | 86MB | 24 chars | 6.000 bits/char | 144 bits |
-| 5 | **Manual (Web)** | 1.49M IDs/sec | 61MB | 24 chars | 6.000 bits/char | 144 bits |
-| - | **UUID v4** | 1.83M IDs/sec | 198MB | 36 chars | 4.050 bits/char | 122 bits |
-| 0 | **Simple** | 1.99M IDs/sec | 100MB | 24 chars | 4.987 bits/char | 120 bits |
-| 1 | **Prompt** | 1.24M IDs/sec | 84MB | 27 chars | 4.770 bits/char | 162 bits |
-| 2 | **Chat-steps** | 1.22M IDs/sec | 21MB | 27 chars | 5.190 bits/char | 162 bits |
+| 5 | **Manual (Server)** | **10.00M IDs/sec** | **69MB** | **24 chars** | **6.000 bits/char** | **144 bits** |
+| 3 | **Tech-specs** | 5.79M IDs/sec | 86MB | 24 chars | 6.000 bits/char | 144 bits |
+| 4 | **By-example** | 1.43M IDs/sec | -118MB | 24 chars | 6.000 bits/char | 144 bits |
+| 5 | **Manual (Web)** | 1.64M IDs/sec | 99MB | 24 chars | 6.000 bits/char | 144 bits |
+| - | **UUID v4** | 2.05M IDs/sec | 194MB | 36 chars | 4.050 bits/char | 122 bits |
+| 0 | **Simple** | 2.02M IDs/sec | 97MB | 24 chars | 4.987 bits/char | 120 bits |
+| 1 | **Prompt** | 1.24M IDs/sec | 83MB | 27 chars | 4.770 bits/char | 162 bits |
+| 2 | **Chat-steps** | 1.21M IDs/sec | 21MB | 27 chars | 5.190 bits/char | 162 bits |
 
 **Key Findings**: 
-- **Manual optimization (Server)** produces the most efficient implementation - 6.90M IDs/sec with excellent memory efficiency (66MB)
-- **Tech-specs approach** provides excellent performance (5.96M IDs/sec) with good memory efficiency (86MB)
-- **Manual optimization (Web)** provides excellent browser compatibility (1.49M IDs/sec) with perfect quality
-- **UUID v4** shows good performance (1.83M IDs/sec) but high memory usage (198MB)
-- **Simple implementation** shows moderate performance (1.99M IDs/sec) with reasonable memory usage (100MB)
+- **Manual optimization (Server)** produces the most efficient implementation - 10.00M IDs/sec with excellent memory efficiency (69MB)
+- **Tech-specs approach** provides excellent performance (5.79M IDs/sec) with good memory efficiency (86MB)
+- **By-example implementation** provides excellent browser compatibility (1.43M IDs/sec) with perfect entropy and negative memory delta (-118MB)
+- **Manual optimization (Web)** provides excellent browser compatibility (1.64M IDs/sec) with perfect quality
+- **UUID v4** shows good performance (2.05M IDs/sec) but high memory usage (194MB)
+- **Simple implementation** shows moderate performance (2.02M IDs/sec) with reasonable memory usage (97MB)
 - All implementations maintain perfect collision resistance (0% collision rate)
 - Node.js 24 provides native Web Crypto API support for .mjs files
 
@@ -166,9 +168,9 @@ The manually optimized implementation demonstrates exceptional performance throu
   - Perfect entropy utilization (100% efficiency)
   - Cross-platform compatibility (Node.js + Browser)
   - Dual implementations: Server (Node.js) and Web (Browser)
-- **Performance**: **6.90M IDs/second (Server)** - fastest implementation
-- **Performance**: **1.49M IDs/second (Web)** - excellent browser compatibility
-- **Memory Usage**: **66MB (Server)** / **61MB (Web)** - excellent memory efficiency
+- **Performance**: **10.00M IDs/second (Server)** - fastest implementation
+- **Performance**: **1.64M IDs/second (Web)** - excellent browser compatibility
+- **Memory Usage**: **69MB (Server)** / **99MB (Web)** - excellent memory efficiency
 - **Size**: 24 characters (compact and efficient)
 - **Usage**: 
   ```javascript

@@ -236,6 +236,11 @@ const runBenchmarks = async () => {
   const simplePerf = `${simpleRate} IDs/sec (${simpleDuration}ms)`;
   console.log(`   Simple (0-Simple): ${simplePerf}`);
 
+  const idRate = idResults.rate.toLocaleString();
+  const idDuration = idResults.duration.toFixed(2);
+  const idPerf = `${idRate} IDs/sec (${idDuration}ms)`;
+  console.log(`   ID (By-example):   ${idPerf}`);
+
   const manualRate = manualResults.rate.toLocaleString();
   const manualDuration = manualResults.duration.toFixed(2);
   const manualPerf = `${manualRate} IDs/sec (${manualDuration}ms)`;
@@ -256,6 +261,7 @@ const runBenchmarks = async () => {
     gsidv1Results.rate,
     gsidv2Results.rate,
     simpleResults.rate,
+    idResults.rate,
     manualResults.rate,
     webResults.rate,
     uuidResults.rate,
@@ -269,6 +275,8 @@ const runBenchmarks = async () => {
     fastestName = 'GSID v2 (Chat)';
   } else if (fastest === simpleResults.rate) {
     fastestName = 'Simple (0-Simple)';
+  } else if (fastest === idResults.rate) {
+    fastestName = 'ID (By-example)';
   } else if (fastest === manualResults.rate) {
     fastestName = 'GSID (5-Manual)';
   } else if (fastest === webResults.rate) {
@@ -297,6 +305,7 @@ const runBenchmarks = async () => {
     1024 /
     1024
   ).toFixed(2);
+  const idMemoryMB = (idResults.memoryDelta.heapUsed / 1024 / 1024).toFixed(2);
   const manualMemoryMB = (
     manualResults.memoryDelta.heapUsed /
     1024 /
@@ -314,6 +323,7 @@ const runBenchmarks = async () => {
   console.log(`   GSID v1 (Prompt):  ${gsidv1MemoryMB} MB`);
   console.log(`   GSID v2 (Chat):    ${gsidv2MemoryMB} MB`);
   console.log(`   Simple (0-Simple): ${simpleMemoryMB} MB`);
+  console.log(`   ID (By-example):   ${idMemoryMB} MB`);
   console.log(`   GSID (5-Manual):   ${manualMemoryMB} MB`);
   console.log(`   GSID (5-Manual-Web): ${webMemoryMB} MB`);
   console.log(`   UUID v4:           ${uuidMemoryMB} MB`);
@@ -327,6 +337,8 @@ const runBenchmarks = async () => {
   console.log(`   GSID v2 (Chat):    ${gsidv2EntropyStr}`);
   const simpleEntropyStr = `${simpleResults.avgEntropy.toFixed(4)} bits/char`;
   console.log(`   Simple (0-Simple): ${simpleEntropyStr}`);
+  const idEntropyStr = `${idResults.avgEntropy.toFixed(4)} bits/char`;
+  console.log(`   ID (By-example):   ${idEntropyStr}`);
   const manualEntropyStr = `${manualResults.avgEntropy.toFixed(4)} bits/char`;
   console.log(`   GSID (5-Manual):   ${manualEntropyStr}`);
   const webEntropyStr = `${webResults.avgEntropy.toFixed(4)} bits/char`;
