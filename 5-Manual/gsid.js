@@ -8,10 +8,9 @@ const UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const CHARS = DIGITS + LOWER + UPPER + '-_';
 const CHARS_LENGTH = CHARS.length;
 
-const LOOKUP_TABLE = new Uint8Array(256);
-
+const POSSIBLE = new Uint8Array(CHARS_LENGTH);
 for (let i = 0; i < 256; i++) {
-  LOOKUP_TABLE[i] = CHARS.charCodeAt(i % CHARS_LENGTH);
+  POSSIBLE[i] = CHARS.charCodeAt(i);
 }
 
 const DEFAULT_LENGTH = 24;
@@ -30,7 +29,7 @@ const generateGSID = (length = DEFAULT_LENGTH) => {
   const start = bufferPos;
   bufferPos += length;
   for (let i = 0; i < length; i++) {
-    result[i] = LOOKUP_TABLE[randomBuffer[start + i]];
+    result[i] = POSSIBLE[randomBuffer[start + i] & 0x3f];
   }
   return result.toString('ascii');
 };
