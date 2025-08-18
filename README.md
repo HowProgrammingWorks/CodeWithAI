@@ -122,9 +122,9 @@ Based on comprehensive benchmarking, the implementations show significant differ
 
 ## Development Tools Used
 
-- **Cursor**: claude-4-sonnet, claude-3.5-sonnet, gpt-4.1, o3, gemini-2.5-pro
+- **Cursor**: gpt-5, claude-4-sonnet, claude-3.5-sonnet, gpt-4.1, o3, gemini-2.5-pro
 - **VS Code with Copilot**: gpt-4.1, claude-4-sonnet, gemini-2.5
-- **ChatGPT**: gpt-4o, o4-mini-high, gpt-4.1, gpt-4.5
+- **ChatGPT**: gtp-5, gpt-4o, o4-mini-high, gpt-4.1, gpt-4.5
 
 ## Getting Started
 
