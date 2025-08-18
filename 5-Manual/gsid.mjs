@@ -4,21 +4,27 @@ const UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const CHARS = DIGITS + LOWER + UPPER + '-_';
 const CHARS_LENGTH = CHARS.length;
 
-const POSSIBLE = new Uint8Array(CHARS_LENGTH);
+const POSSIBLE = new Uint8Array(256);
 for (let i = 0; i < CHARS_LENGTH; i++) {
-  POSSIBLE[i] = CHARS.charCodeAt(i);
+  const char = CHARS.charCodeAt(i);
+  POSSIBLE[i] = char;
+  POSSIBLE[i + 64] = char;
+  POSSIBLE[i + 128] = char;
+  POSSIBLE[i + 192] = char;
 }
 
 const DEFAULT_LENGTH = 24;
-const BUF_SIZE = DEFAULT_LENGTH * 1024;
+const BUF_SIZE = 65536;
 
 const randomBuffer = new Uint8Array(BUF_SIZE);
-const resultBuffer = [];
-resultBuffer[DEFAULT_LENGTH] = new Uint8Array(DEFAULT_LENGTH);
-
 crypto.getRandomValues(randomBuffer);
 
 let bufferPos = 0;
+
+const decoder = new TextDecoder();
+
+const resultBuffer = [];
+resultBuffer[DEFAULT_LENGTH] = new Uint8Array(DEFAULT_LENGTH);
 
 const generateId = (length = DEFAULT_LENGTH) => {
   let result = resultBuffer[length];
@@ -33,9 +39,9 @@ const generateId = (length = DEFAULT_LENGTH) => {
   const start = bufferPos;
   bufferPos += length;
   for (let i = 0; i < length; i++) {
-    result[i] = POSSIBLE[randomBuffer[start + i] & 0x3f];
+    result[i] = POSSIBLE[randomBuffer[start + i]];
   }
-  return String.fromCharCode(...result);
+  return decoder.decode(result);
 };
 
 export { generateId, CHARS };

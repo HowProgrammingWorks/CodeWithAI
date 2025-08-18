@@ -8,9 +8,13 @@ const UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const CHARS = DIGITS + LOWER + UPPER + '-_';
 const CHARS_LENGTH = CHARS.length;
 
-const POSSIBLE = new Uint8Array(CHARS_LENGTH);
+const POSSIBLE = new Uint8Array(256);
 for (let i = 0; i < CHARS_LENGTH; i++) {
-  POSSIBLE[i] = CHARS.charCodeAt(i);
+  const char = CHARS.charCodeAt(i);
+  POSSIBLE[i] = char;
+  POSSIBLE[i + 64] = char;
+  POSSIBLE[i + 128] = char;
+  POSSIBLE[i + 192] = char;
 }
 
 const DEFAULT_LENGTH = 24;
