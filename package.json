@@ -6,8 +6,8 @@
   "scripts": {
     "benchmark": "node benchmark.js",
     "test": "npm run lint && node --test",
-    "lint": "eslint . && prettier --check \"**/*.js\"",
-    "fix": "eslint . --fix && prettier --write \"**/*.js\""
+    "lint": "eslint . && prettier --check \"**/*.js\" \"**/*.mjs\"",
+    "fix": "eslint . --fix && prettier --write \"**/*.js\" \"**/*.mjs\""
   },
   "engines": {
     "node": ">=16.0.0"
